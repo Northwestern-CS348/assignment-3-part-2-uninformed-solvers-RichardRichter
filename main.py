@@ -37,7 +37,7 @@ class KBTest(unittest.TestCase):
         """
         solver.solve()
 
-    def runPlayXSteps(self, solver, plays, timeout=5):
+    def runPlayXSteps(self, solver, plays, timeout=5000):
         """
         Wrapper function; calls playXSteps(..) with a timeout
 
@@ -48,13 +48,14 @@ class KBTest(unittest.TestCase):
         """
         try:
             results = self.pool.apply_async(self.playXSteps, [solver, plays]).get(timeout)
+            #print(results)
             for index, play in enumerate(plays):
                 expected = play[1]
                 self.assertEqual(results[index], expected)
         except TimeoutError:
             raise Exception("Timed out: %s" % inspect.stack()[1][3])
 
-    def runSolve(self, solver, timeout=5):
+    def runSolve(self, solver, timeout=20):
         """
         Wrapper function; calls solve(..) with a timeout
 
@@ -86,15 +87,15 @@ class KBTest(unittest.TestCase):
         th.reverseMove(movables[1])
         self.assertEqual(th.getGameState(), ((1,2,3),(),()))
 
-        # movables = th.getMovables()
-        # print(movables)
-        # self.assertEqual(th.getGameState(), ((1,2,3),(),()))
-        # print("it was true")
-        # th.makeMove(movables[0])
-        # self.assertEqual(th.getGameState(), ((2,3),(1,),()))
-        # print("ricky this was also true")
-        # th.reverseMove(movables[0])
-        # self.assertEqual(th.getGameState(), ((1,2,3),(),()))
+    #     # movables = th.getMovables()
+    #     # print(movables)
+    #     # self.assertEqual(th.getGameState(), ((1,2,3),(),()))
+    #     # print("it was true")
+    #     # th.makeMove(movables[0])
+    #     # self.assertEqual(th.getGameState(), ((2,3),(1,),()))
+    #     # print("ricky this was also true")
+    #     # th.reverseMove(movables[0])
+    #     # self.assertEqual(th.getGameState(), ((1,2,3),(),()))
 
     # def test02_DFS_Hanoi(self):
     #     th = TowerOfHanoiGame()
@@ -178,43 +179,45 @@ class KBTest(unittest.TestCase):
         self.assertEqual(p8.getGameState(), ((5,4,-1),(6,1,8),(7,3,2)))
 
 
-    # def test07_DFS_8Puzzle(self):
-    #     p8 = Puzzle8Game()
-    #     p8.read('puzzle8_top_right_empty.txt')
-    #     required = [
-    #         'fact: (movable tile6 pos3 pos2 pos3 pos3)',
-    #         'fact: (movable tile8 pos2 pos3 pos3 pos3)',
-    #     ]
-    #     p8.setWinningCondition(required, 'puzzle8_all_forbidden.txt')
-    #     self.assertFalse(p8.isWon())
+    def test07_DFS_8Puzzle(self):
+        p8 = Puzzle8Game()
+        p8.read('puzzle8_top_right_empty.txt')
+        required = [
+            'fact: (movable tile6 pos3 pos2 pos3 pos3)',
+            'fact: (movable tile8 pos2 pos3 pos3 pos3)',
+        ]
+        p8.setWinningCondition(required, 'puzzle8_all_forbidden.txt')
+        self.assertFalse(p8.isWon())
 
-    #     solver = SolverDFS(p8,((1,2,3),(4,5,6),(7,8,-1)))
+        solver = SolverDFS(p8,((1,2,3),(4,5,6),(7,8,-1)))
 
-    #     self.runPlayXSteps(solver, [
-    #         # [step, expected game state]
-    #         [9, ((4, 8, 1), (5, 3, -1), (6, 7, 2))],
-    #         [17, ((8, 1, 2), (4, 3, -1), (5, 6, 7))],
-    #         [34, ((2, 7, 6), (1, 3, 5), (8, 4, -1))],
-    #     ])
+        self.runPlayXSteps(solver, [
+            # [step, expected game state]
+            [9, ((4, 8, 1), (5, 3, -1), (6, 7, 2))],
+            [17, ((8, 1, 2), (4, 3, -1), (5, 6, 7))],
+            [34, ((2, 7, 6), (1, 3, 5), (8, 4, -1))],
+        ])
+        #print("Ricky DFS worked")
 
-    # def test08_BFS_8Puzzle(self):
-    #     p8 = Puzzle8Game()
-    #     p8.read('puzzle8_top_right_empty.txt')
-    #     required = [
-    #         'fact: (movable tile6 pos3 pos2 pos3 pos3)',
-    #         'fact: (movable tile8 pos2 pos3 pos3 pos3)',
-    #     ]
-    #     p8.setWinningCondition(required, 'puzzle8_all_forbidden.txt')
-    #     self.assertFalse(p8.isWon())
+    def test08_BFS_8Puzzle(self):
+        p8 = Puzzle8Game()
+        p8.read('puzzle8_top_right_empty.txt')
+        required = [
+            'fact: (movable tile6 pos3 pos2 pos3 pos3)',
+            'fact: (movable tile8 pos2 pos3 pos3 pos3)',
+        ]
+        p8.setWinningCondition(required, 'puzzle8_all_forbidden.txt')
+        self.assertFalse(p8.isWon())
 
-    #     solver = SolverBFS(p8,((1,2,3),(4,5,6),(7,8,-1)))
+        solver = SolverBFS(p8,((1,2,3),(4,5,6),(7,8,-1)))
 
-    #     self.runPlayXSteps(solver, [
-    #         # [step, expected game state]
-    #         [5, ((-1, 5, 4), (6, 1, 8), (7, 3, 2))],
-    #         [13, ((5, 1, 4), (6, 8, -1), (7, 3, 2))],
-    #         [21, ((5, 4, 8), (6, 1, 2), (-1, 7, 3))],
-    #     ])
+        self.runPlayXSteps(solver, [
+            # [step, expected game state]
+            [5, ((-1, 5, 4), (6, 1, 8), (7, 3, 2))],
+            [13, ((5, 1, 4), (6, 8, -1), (7, 3, 2))],
+            [21, ((5, 4, 8), (6, 1, 2), (-1, 7, 3))],
+        ])
+        #print("Ricky BFS worked")
 
 
 if __name__ == '__main__':

@@ -92,7 +92,63 @@ class TowerOfHanoiGame(GameMaster):
         move_disk = str(statement.terms[0])
         curr_peg = str(statement.terms[1])
         to_peg = str(statement.terms[2])
+       #print(movable_statement)
 
+        #my old makeMove got WAY To complicated, so i tried simplfying it to what is seen below, however it still doesnt work so that sucks       
+        was_move_disk_under_another_disk_ask = parse_input("fact: (on "+move_disk+" ?x)")
+        was_move_disk_under_another_disk = self.kb.kb_ask(was_move_disk_under_another_disk_ask)
+
+        if was_move_disk_under_another_disk != False:
+            disk_under = str(was_move_disk_under_another_disk[0].bindings[0].constant)
+            retracting_on_top_of_move_disk_under_disk = parse_input("fact: (onTopOf "+move_disk+ " " + disk_under+")")
+            self.kb.kb_retract(retracting_on_top_of_move_disk_under_disk)
+            #if self.kb.kb_ask(retracting_on_top_of_move_disk_under_disk) == False:
+            #   print("Retracted Successfully")
+            under_disk_is_new_top = parse_input("fact: (top "+disk_under+ " "+curr_peg+")")
+            self.kb.kb_assert(under_disk_is_new_top)
+            #if self.kb.kb_ask(under_disk_is_new_top) == True:
+            #   print("Asserted Successfully")
+        else:
+            curr_peg_now_empty = parse_input("fact: (empty "+curr_peg+")")
+            self.kb.kb_assert(curr_peg_now_empty)
+        
+        retracting_top_from_curr_peg = parse_input("fact: (top "+move_disk+ " " + curr_peg+")")
+        self.kb.kb_retract(retracting_top_from_curr_peg)
+        #if self.kb.kb_ask(retracting_top_from_curr_peg) == False:
+            #   print("Retracted Successfully")
+        retract_on_peg = parse_input("fact: (on " + move_disk + " " + curr_peg + ")")
+        self.kb.kb_retract(retract_on_peg)
+        #if self.kb.kb_ask(retract_on_peg) == False:
+            #   print("Retracted Successfully")
+        topping_to_peg_ask = parse_input("fact: (top ?x " + to_peg+")")
+        whats_topping_to_peg = self.kb.kb_ask(topping_to_peg_ask)
+        if whats_topping_to_peg == False:
+            to_peg_is_empty = parse_input("fact: (empty "+ to_peg +")")
+            self.kb.kb_retract(to_peg_is_empty)
+            #if self.kb.kb_ask(to_peg_is_empty) == False:
+            #   print("Retracted Successfully")
+        else:
+            topping_to_peg = str(whats_topping_to_peg[0].bindings[0].constant)
+            retracting_to_pegs_top = parse_input("fact: (top "+topping_to_peg+" "+ to_peg+")")
+            self.kb.kb_retract(retracting_to_pegs_top)
+            #if self.kb.kb_ask(retracting_to_pegs_top) == False:
+            #   print("Retracted Successfully")
+            creating_to_pegs_past_tops_new_top = parse_input("fact: (onTopOf "+move_disk+" "+topping_to_peg+")")
+            self.kb.kb_assert(creating_to_pegs_past_tops_new_top)
+            #if self.kb.kb_ask(creating_to_pegs_past_tops_new_top) == True:
+            #   print("Asserted Successfully")
+        
+        
+        move_to_on_to_peg = parse_input("fact: (on "+move_disk+" "+to_peg+")")
+        move_to_top_to_peg = parse_input("fact: (top "+move_disk+" "+to_peg+")")
+        self.kb.kb_assert(move_to_on_to_peg)
+        self.kb.kb_assert(move_to_top_to_peg)
+        #if self.kb.kb_ask(move_to_on_to_peg) == True:
+            #   print("Asserted Successfully")
+         #if self.kb.kb_ask(move_to_top_to_peg) == True:
+            #   print("Asserted Successfully")
+
+         #Minor of Old Version of Tower of Hanoi
         # question_above = parse_input("fact: (above " + move_disk + ") + ?y")
         # disks_below = self.kb.kb_ask(question_above)
         # disks_below_string = str(disks_below)
@@ -102,60 +158,6 @@ class TowerOfHanoiGame(GameMaster):
         #     current_peg = False
         # else:
         #     current_peg = True
-        
-        statement_new_destination_ask = parse_input("fact: (empty " + to_peg +")")
-        statement_new_destination_empty = self.kb.kb_ask(statement_new_destination_ask)
-        if statement_new_destination_empty == False:
-            move_to_peg = False
-        else:
-            move_to_peg = True
-        
-        
-        if move_to_peg == False:
-            #means that there is a peg where we are moving to
-            # find_what_peg = parse_input("fact: (on "+ move_disk + " ?x)")
-            # which_peg = kb.kb_ask(find_what_peg)
-            # old_pegs_new_top_fact =  parse_input("fact: (onTopOf "+ move_disk +" "+curr_below+")")
-            #could be used now retract_on = parse_input("fact: (onTopOf "+ move_disk +" "+curr_below+")")
-            move_to_current_top_ask = parse_input("fact: (top ?x " + to_peg + ")")
-            move_to_current_top = self.kb.kb_ask(move_to_current_top_ask)
-            current_top_disk = str(move_to_current_top[0].bindings[0].constant)
-            question_is_current_top_smaller_than_moving_disk_ask = parse_input("fact: (lessThan "+move_disk+" "+current_top_disk+")")
-            question_is_current_top_smaller_than_moving_disk = self.kb.kb_ask(question_is_current_top_smaller_than_moving_disk_ask)
-            if question_is_current_top_smaller_than_moving_disk == False:
-                return
-            remove_disk_from_top = parse_input("fact: (top "+current_top_disk+ " " + to_peg + ")")
-            self.kb.kb_remove(remove_disk_from_top)
-           
-
-            #this stuff isnt needed because I forgot it was already a legal move
-            #new_ask = parse_input("fact: (largerthan " + move_disk + curr_top_disk + ")")
-            #move_to_curr_top_question = self.kb.kb_ask(new_ask)
-            #if move_to_curr_top_question == False:
-        
-        retract_on = parse_input("fact: (on "+ move_disk +" "+ curr_peg+")")    
-        retract_top = parse_input("fact: (top "+ move_disk +" "+curr_peg+")")
-        old_pegs_new_top_ask =  parse_input("fact: (onTopOf "+ move_disk +" ?x)")
-        old_pegs_new_top_fact = self.kb.kb_ask(old_pegs_new_top_ask)
-        old_pegs_new_top = str(old_pegs_new_top_fact[0].bindings[0].constant)
-        adding_old_new_top_statement = parse_input("fact: (top "+ old_pegs_new_top +" "+curr_peg+")")
-
-        self.kb.kb_retract(retract_top)
-        self.kb.kb_retract(retract_on)
-        self.kb.kb_assert(adding_old_new_top_statement)
-
-
-        final_move_top = parse_input("fact: (top "+ move_disk +" "+to_peg+")")
-        final_move_on = parse_input("fact: (on "+ move_disk +" "+to_peg+")")
-        self.kb.kb_assert(final_move_on)
-        #final_move_on = will be a series to see what it should be on top off
-        self.kb.kb_assert(final_move_top)
-        #current problem is that you arent setting the new one as the top
-
-        # for bfs, go up to required next state, you need the previous game state to know that you can reach that move, thats the first condition, the second condition is going going to the next sibling, you can move from a parent to a sibling, if the those nodes have children, you can populate the tree with its children, 
-        # go up to find required next state, 
-        # go to sibling 
-        # go down and add required node
 
     def reverseMove(self, movable_statement):
         """
@@ -264,34 +266,27 @@ class Puzzle8Game(GameMaster):
                 remove_q_1 = parse_input("fact: (adjancent " + move_disk +" "+ adj+")")
                 remove_q_2 = parse_input("fact: (adjancent " + adj +" "+ move_disk+")")
                 remove_1 = self.kb.kb_ask(remove_q_1)
-                remove_2 = self.kb.kb_ask(remove_q_2)
                 if remove_1 != False:
-                    self.kb.kb_remove(remove_1)
+                    self.kb.kb_retract(remove_1)
+                remove_2 = self.kb.kb_ask(remove_q_2)
                 if remove_2 != False:
-                    self.kb.kb_remove(remove_2)
+                    self.kb.kb_retract(remove_2)
             #need to remove empty
             #need to remove current
             #need to place current
             #need to place empty
 
             empty_fact_remove = parse_input("fact: (coordinate empty "+move_x+" "+move_y+")")
-            self.kb.kb_remove(empty_fact_remove)
+            self.kb.kb_retract(empty_fact_remove)
             non_empty_remove = parse_input("fact: (coordinate "+move_disk+ " "+curr_x+" "+curr_y+")")
-            self.kb.kb_remove(non_empty_remove)
+            self.kb.kb_retract(non_empty_remove)
             non_empty_assert = parse_input("fact: (coordinate "+move_disk+ " "+move_x+" "+move_y+")")
             self.kb.kb_assert(non_empty_assert)
             empty_assert = parse_input("fact: (coordinate empty "+curr_x+" "+curr_y+")")
             self.kb.kb_assert(empty_assert)
 
-        # question_above = parse_input("fact: (above " + move_disk + ") + ?y")
-        # disks_below = self.kb.kb_ask(question_above)
-        # disks_below_string = str(disks_below)
-        # disks_below = disks_below_string.split()
 
-        # if disks_below.__len__ == 0:
-        #     current_peg = False
-        # else:
-        #     current_peg = True
+   
         
         
 
@@ -310,3 +305,109 @@ class Puzzle8Game(GameMaster):
         sl = movable_statement.terms
         newList = [pred, sl[0], sl[3], sl[4], sl[1], sl[2]]
         self.makeMove(Statement(newList))
+
+#Majority of old components of Tower of
+ # # question_above = parse_input("fact: (above " + move_disk + ") + ?y")
+        # # disks_below = self.kb.kb_ask(question_above)
+        # # disks_below_string = str(disks_below)
+        # # disks_below = disks_below_string.split()
+
+        # # if disks_below.__len__ == 0:
+        # #     current_peg = False
+        # # else:
+        # #     current_peg = True
+        
+        # statement_new_destination_ask = parse_input("fact: (empty " + to_peg +")")
+        # statement_new_destination_empty = self.kb.kb_ask(statement_new_destination_ask)
+        # if statement_new_destination_empty == False:
+        #     move_to_peg = False
+        # else:
+        #     move_to_peg = True
+        
+        
+        # if move_to_peg == False:
+        #     #means that there is a peg where we are moving to
+        #     # find_what_peg = parse_input("fact: (on "+ move_disk + " ?x)")
+        #     # which_peg = kb.kb_ask(find_what_peg)
+        #     # old_pegs_new_top_fact =  parse_input("fact: (onTopOf "+ move_disk +" "+curr_below+")")
+        #     #could be used now retract_on = parse_input("fact: (onTopOf "+ move_disk +" "+curr_below+")")
+        #     move_to_current_top_ask = parse_input("fact: (top ?x " + to_peg + ")")
+        #     move_to_current_top = self.kb.kb_ask(move_to_current_top_ask)
+        #     current_top_disk = str(move_to_current_top[0].bindings[0].constant)
+        #     question_is_current_top_smaller_than_moving_disk_ask = parse_input("fact: (lessThan "+move_disk+" "+current_top_disk+")")
+        #     question_is_current_top_smaller_than_moving_disk = self.kb.kb_ask(question_is_current_top_smaller_than_moving_disk_ask)
+        #     if question_is_current_top_smaller_than_moving_disk == False:
+        #         return
+        #     remove_disk_from_top = parse_input("fact: (top "+current_top_disk+ " " + to_peg + ")")
+        #     self.kb.kb_retract(remove_disk_from_top)
+           
+
+        #     #this stuff isnt needed because I forgot it was already a legal move
+        #     #new_ask = parse_input("fact: (largerthan " + move_disk + curr_top_disk + ")")
+        #     #move_to_curr_top_question = self.kb.kb_ask(new_ask)
+        #     #if move_to_curr_top_question == False:
+        
+        # retract_on = parse_input("fact: (on "+ move_disk +" "+ curr_peg+")")    
+        # retract_top = parse_input("fact: (top "+ move_disk +" "+curr_peg+")")
+        # old_pegs_new_top_ask =  parse_input("fact: (onTopOf "+ move_disk +" ?x)")
+        # old_pegs_new_top_fact = self.kb.kb_ask(old_pegs_new_top_ask)
+        # #everything old_pegs_new_top_fact related has been recently altered
+        # print(old_pegs_new_top_fact)
+        # if old_pegs_new_top_fact != False:
+        #     old_pegs_new_top = str(old_pegs_new_top_fact[0].bindings[0].constant)
+        #     print(old_pegs_new_top)
+        #     adding_old_new_top_statement = parse_input("fact: (top "+ old_pegs_new_top +" "+curr_peg+")")
+        #     #line below is experimental
+        #     old_pegs_new_top_retract = parse_input("fact: onTopOf "+ move_disk+" "+old_pegs_new_top+")")
+        #     self.kb.kb_retract(old_pegs_new_top_retract)
+        #     retract_check = self.kb.kb_ask(old_pegs_new_top_retract)
+        #     if retract_check == False:
+        #         print("RICKY YOUR GOOD IT RETRACTED")
+        # else:
+        #     adding_old_new_top_statement = parse_input("fact: (empty "+curr_peg+")")
+        # self.kb.kb_retract(retract_top)
+        # retract_check = self.kb.kb_ask(retract_top)
+        # if retract_check == False:
+        #     print("RICKY YOUR GOOD IT RETRACTED TOP")
+        # self.kb.kb_retract(retract_on)
+        # retract_check = self.kb.kb_ask(retract_on)
+        # if retract_check == False:
+        #     print("RICKY YOUR GOOD IT RETRACTED ON")
+        # self.kb.kb_assert(adding_old_new_top_statement)
+        # assert_check = self.kb.kb_ask(adding_old_new_top_statement)
+        # if assert_check != False:
+        #     print("ricky the assert top for old peg works")
+        # print("check to see old pegs new top")
+        # if old_pegs_new_top_fact:
+        #     retract_repeated_old_new_top = parse_input("rule: (lessThan "+ old_pegs_new_top+ " " +old_pegs_new_top+")")
+        #     self.kb.kb_retract(retract_repeated_old_new_top)
+        # print(adding_old_new_top_statement)
+        # print(adding_old_new_top_statement.supports_rules[0])
+        # print(adding_old_new_top_statement.supports_rules[1])
+        # print(adding_old_new_top_statement.supports_rules[2])
+        # print(adding_old_new_top_statement.supports_rules[3])
+        # #noticed that there is a rule saying that if a disk is lessThan disk2 disk2
+        
+        # final_move_top = parse_input("fact: (top "+ move_disk +" "+to_peg+")")
+        # print("move made top")
+        # print(final_move_top)
+        # final_move_on = parse_input("fact: (on "+ move_disk +" "+to_peg+")")
+        # print("move made on")
+        # print(final_move_on)
+        # self.kb.kb_assert(final_move_on)
+        # assert_check = self.kb.kb_ask(final_move_on)
+        # if assert_check == False:
+        #     print("RICKY THE ASSERT ON FAILED")
+        # #final_move_on = will be a series to see what it should be on top off
+        # assert_check = self.kb.kb_assert(final_move_top)
+        # if assert_check == False:
+        #     print("RICKY THE ASSERT TOP FAILED")
+        # aaslf = 1
+        # #current problem is that you arent setting the new one as the top
+
+
+    #office hours notes
+        # for bfs, go up to required next state, you need the previous game state to know that you can reach that move, thats the first condition, the second condition is going going to the next sibling, you can move from a parent to a sibling, if the those nodes have children, you can populate the tree with its children, 
+        # go up to find required next state, 
+        # go to sibling 
+        # go down and add required node
